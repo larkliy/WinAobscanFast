@@ -2,6 +2,9 @@
 using Microsoft.Win32.SafeHandles;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using WinAobscanFast.Enums;
+using WinAobscanFast.Structs;
+using WinAobscanFast.Extensions;
 
 namespace WinAobscanFast;
 
@@ -54,7 +57,7 @@ public class AobScan
 
                     try
                     {
-                        if (NativeMethods.ReadProcessMemory(_processHandle, mbi.BaseAddress, buffer, (nuint)buffer.Length, out nuint bytesRead))
+                        if (Native.ReadProcessMemory(_processHandle, mbi.BaseAddress, buffer, (nuint)buffer.Length, out nuint bytesRead))
                         {
                             ScanRegionForPattern(in mbi, threadLocalList, in pattern, regionsSize, in buffer);
                         }
@@ -143,7 +146,7 @@ public class AobScan
 
         while (address < searchEnd)
         {
-            if (NativeMethods.VirtualQueryEx(_processHandle, address, out var mbi, Unsafe.SizeOf<MEMORY_BASIC_INFORMATION>()) == 0)
+            if (Native.VirtualQueryEx(_processHandle, address, out var mbi, Unsafe.SizeOf<MEMORY_BASIC_INFORMATION>()) == 0)
                 break;
 
             nint regionStart = mbi.BaseAddress;

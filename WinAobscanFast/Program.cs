@@ -1,5 +1,7 @@
 using WinAobscanFast;
 using System.Diagnostics;
+using WinAobscanFast.Utils;
+using WinAobscanFast.Enums;
 
 var processId = ProcessUtils.FindByExeName("HD-Player.exe");
 using var processHandle = ProcessUtils.OpenProcessById(processId);
