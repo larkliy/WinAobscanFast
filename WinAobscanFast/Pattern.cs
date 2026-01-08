@@ -121,7 +121,7 @@ public readonly struct Pattern
 
         for (; i < length; i++)
         {
-            if ((Unsafe.Add(ref pBytes, i) & Unsafe.Add(ref pMask, i)) != Unsafe.Add(ref pMask, i))
+            if ((Unsafe.Add(ref pBytes, i) & Unsafe.Add(ref pMask, i)) != Unsafe.Add(ref pBytes, i))
                 return false;
         }
 
