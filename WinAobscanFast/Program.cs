@@ -3,12 +3,12 @@ using System.Diagnostics;
 using WinAobscanFast.Utils;
 using WinAobscanFast.Enums;
 
-var processId = ProcessUtils.FindByExeName("notepad.exe");
+var processId = ProcessUtils.FindByExeName("HD-Player.exe");
 using var processHandle = ProcessUtils.OpenProcessById(processId);
 
 var aob = new AobScan(processHandle);
 
-const int runs = 5000;
+const int runs = 10;
 
 long totalMs = 0;
 long totalTicks = 0;

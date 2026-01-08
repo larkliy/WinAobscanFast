@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace WinAobscanFast;
 
@@ -86,29 +87,30 @@ public readonly struct Pattern
         return (pBytes.Slice(bestStart, bestLength).ToArray(), bestStart);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsMatch(ReadOnlySpan<byte> pData)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public bool IsMatch(ReadOnlySpan<byte> data)
     {
         int length = Bytes.Length;
 
-        if (pData.Length < length)
+        if (data.Length < length)
             return false;
 
-        ReadOnlySpan<byte> pMask = Mask;
-        ReadOnlySpan<byte> pBytes = Bytes;
+        ref var pBytes = ref MemoryMarshal.GetArrayDataReference(Bytes);
+        ref var pMask = ref MemoryMarshal.GetArrayDataReference(Mask);
+        ref var pData = ref MemoryMarshal.GetReference(data);
 
-        int vecSize = Vector<byte>.Count;
         int i = 0;
 
         if (Vector.IsHardwareAccelerated)
         {
+            int vecSize = Vector<byte>.Count;
             int simdEnd = length - vecSize;
 
             while (i <= simdEnd)
             {
-                var vBytes = new Vector<byte>(pBytes[i..]);
-                var vMask = new Vector<byte>(pMask[i..]);
-                var vData = new Vector<byte>(pData[i..]);
+                var vBytes = Unsafe.ReadUnaligned<Vector<byte>>(ref Unsafe.Add(ref pBytes, i));
+                var vMask = Unsafe.ReadUnaligned<Vector<byte>>(ref Unsafe.Add(ref pMask, i));
+                var vData = Unsafe.ReadUnaligned<Vector<byte>>(ref Unsafe.Add(ref pData, i));
 
                 if (!Vector.EqualsAll(vData & vMask, vBytes))
                     return false;
@@ -119,7 +121,7 @@ public readonly struct Pattern
 
         for (; i < length; i++)
         {
-            if ((pData[i] & pMask[i]) != pBytes[i])
+            if ((Unsafe.Add(ref pBytes, i) & Unsafe.Add(ref pMask, i)) != Unsafe.Add(ref pMask, i))
                 return false;
         }
 

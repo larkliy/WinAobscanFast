@@ -1,6 +1,5 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using System.Buffers;
-using System.Runtime.CompilerServices;
 using WinAobscanFast.Enums;
 using WinAobscanFast.Structs;
 using WinAobscanFast.Utils;
