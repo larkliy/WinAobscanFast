@@ -1,20 +1,21 @@
-using WinAobscanFast;
 using System.Diagnostics;
-using WinAobscanFast.Utils;
-using WinAobscanFast.Enums;
+using WinAobscanFast;
+using WinAobscanFast.Implementations;
 
-var processId = ProcessUtils.FindByExeName("notepad.exe");
-using var processHandle = ProcessUtils.OpenProcessById(processId);
+var processId = WindowsProcessUtils.FindByName("notepad.exe");
+var processHandle = WindowsProcessUtils.OpenProcess(processId);
 
-var aob = new AobScan(processHandle);
+using var memoryReader = new WindowsMemoryReader(processHandle);
 
-const int runs = 5000;
+var aob = new AobScan(memoryReader);
+
+const int runs = 800;
 
 long totalMs = 0;
 long totalTicks = 0;
 int found = 0;
 
-aob.Scan("20 20 30 40 50 70 80 90 99");
+aob.Scan("20 20");
 
 List<nint> list = null!;
 
@@ -22,7 +23,7 @@ for (int i = 0; i < runs; i++)
 {
     var sw = Stopwatch.StartNew();
 
-    list = aob.Scan("20 20 30 40 50 70 80 90 99");
+    list = aob.Scan("20 20");
 
     sw.Stop();
 
