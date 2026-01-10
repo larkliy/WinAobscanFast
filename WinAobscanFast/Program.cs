@@ -2,19 +2,18 @@ using System.Diagnostics;
 using WinAobscanFast.Core;
 using WinAobscanFast.Core.Implementations;
 
-var processId = WindowsProcessUtils.FindByName("notepad.exe");
-var handle = WindowsProcessUtils.OpenProcess(processId);
-using var winReader = new WindowsMemoryReader(handle);
+var processId = WindowsProcessUtils.FindByName("HD-Player.exe");
+using var handle = WindowsProcessUtils.OpenProcess(processId);
 
-var aobscan = new AobScan(winReader);
+var aobscan = new AobScan(new WindowsMemoryReader(handle));
 
-const int runs = 5000;
+const int runs = 20;
 
 long totalMs = 0;
 long totalTicks = 0;
 int found = 0;
 
-aobscan.Scan("20 20 20 20 20 20 20 0A 0A");
+aobscan.Scan("20 20");
 
 List<nint> list = null!;
 
@@ -22,7 +21,7 @@ for (int i = 0; i < runs; i++)
 {
     var sw = Stopwatch.StartNew();
 
-    list = aobscan.Scan("20 20 20 20 20 20 20 0A 0A");
+    list = aobscan.Scan("20 20");
 
     sw.Stop();
 

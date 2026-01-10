@@ -34,7 +34,7 @@ public class AobScan
                                                   (nint)scanOptions.MaxScanAddress!,
                                                   scanOptions.MemoryAccess);
 
-        var chunks = RegionChunker.CreateWorkChunks(rawRegions, pattern.Bytes.Length);
+        var chunks = RegionChunker.CreateMemoryChunks(rawRegions, pattern.Bytes.Length);
 
         Parallel.ForEach(chunks,
             () => new List<nint>(capacity: 64),
@@ -94,7 +94,7 @@ public class AobScan
         in MemoryRange mbi,
         List<nint> threadLocalList,
         in Pattern pattern,
-        nint regionsSize,
+        int regionsSize,
         in Span<byte> buffer)
     {
         int seqOffset = pattern.SearchSequenceOffset;
@@ -102,7 +102,7 @@ public class AobScan
         int patternLength = pattern.Bytes.Length;
         int searchSeqLength = searchSeq.Length;
 
-        int lastValidPatternStart = (int)regionsSize - patternLength;
+        int lastValidPatternStart = regionsSize - patternLength;
 
         int lastValidSeqPos = lastValidPatternStart + seqOffset;
 

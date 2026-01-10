@@ -3,7 +3,7 @@ using WinAobscanFast.Enums;
 
 namespace WinAobscanFast.Core.Abstractions;
 
-public interface IMemoryReader : IDisposable
+public interface IMemoryReader
 {
     List<MemoryRange> GetRegions(nint minAddress, nint maxAddress, MemoryAccess access);
 

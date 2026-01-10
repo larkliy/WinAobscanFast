@@ -6,44 +6,47 @@ namespace WinAobscanFast.Utils;
 
 public static class RegionChunker
 {
-    public static List<MemoryRange> CreateWorkChunks(List<MemoryRange> osRegions, int patternLength)
+    public static List<MemoryRange> CreateMemoryChunks(List<MemoryRange> ranges, int patternLength)
     {
-        var list = new List<MemoryRange>(2048);
+        const nint chunkSize = 256 * 1024;
 
-        const long chunkSize = 256 * 1024;
+        if (patternLength >= chunkSize)
+            throw new ArgumentException("Pattern length cannot exceed chunk size");
 
+        var result = new List<MemoryRange>(ranges.Count * 5);
         int overlap = patternLength - 1;
 
-        ref var rangeRef = ref MemoryMarshal.GetReference(CollectionsMarshal.AsSpan(osRegions));
-
-        nuint len = (nuint)osRegions.Count;
+        var span = CollectionsMarshal.AsSpan(ranges);
+        ref var rangeRef = ref MemoryMarshal.GetReference(span);
+        nuint len = (nuint)span.Length;
 
         for (nuint i = 0; i < len; i++)
         {
-            ref var range = ref Unsafe.Add(ref rangeRef, i);
+            ref readonly var range = ref Unsafe.Add(ref rangeRef, i);
 
             nint currentPtr = range.BaseAddress;
-            long remaining = range.Size;
+            nint remaining = range.Size;
 
             while (remaining > 0)
             {
-                long sizeToRead = remaining > chunkSize ? chunkSize : remaining;
+                nint sizeToRead = remaining > chunkSize ? chunkSize : remaining;
 
                 if (sizeToRead < patternLength)
                     break;
 
-                list.Add(new MemoryRange(currentPtr, (nint)sizeToRead));
+                result.Add(new MemoryRange(currentPtr, sizeToRead));
 
                 if (sizeToRead == remaining)
                     break;
 
-                long step = sizeToRead - overlap;
+                nint step = sizeToRead - overlap;
 
-                currentPtr += (nint)step;
+                currentPtr += step;
                 remaining -= step;
             }
         }
 
-        return list;
+        return result;
     }
+
 }

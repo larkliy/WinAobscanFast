@@ -1,8 +1,9 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using WinAobscanFast.Core.Extensions;
 using WinAobscanFast.Core.Models;
 using WinAobscanFast.Enums;
-using WinAobscanFast.Core.Extensions;
 using WinAobscanFast.Structs;
 
 namespace WinAobscanFast.Utils;
@@ -16,43 +17,25 @@ public class MemoryRegionUtils
     {
         nint currentAddress = searchStart;
         var regions = new List<MemoryRange>(256);
-        int mbiSize = Unsafe.SizeOf<MEMORY_BASIC_INFORMATION>();
+        nint mbiSize = Unsafe.SizeOf<MEMORY_BASIC_INFORMATION>();
 
         while (currentAddress < searchEnd)
         {
             if (Native.VirtualQueryEx(processHandle, currentAddress, out var mbi, mbiSize) == 0)
                 break;
 
-            nint regionStart = mbi.BaseAddress;
-            nint regionSize = mbi.RegionSize;
-            nint regionEnd = regionStart + regionSize;
-
             bool isCommit = mbi.State == MemoryState.MEM_COMMIT;
             bool isGuard = (mbi.Protect & MemoryProtect.PAGE_GUARD) != 0;
             bool isNoAccess = (mbi.Protect & MemoryProtect.PAGE_NOACCESS) != 0;
 
             if (isCommit && !isGuard && !isNoAccess)
-            {
                 if (CheckAccess(ref mbi, accessFilter))
-                {
-                    nint realStart = regionStart < searchStart ? searchStart : regionStart;
-                    nint realEnd = regionEnd > searchEnd ? searchEnd : regionEnd;
-
-                    nint realSize = realEnd - realStart;
-
-                    if (realSize > 0)
-                    {
-                        regions.Add(new MemoryRange(realStart, realSize));
-                    }
-                }
-            }
-
-            currentAddress = regionEnd;
-
-            if (regionSize == 0) break;
+                    regions.Add(new MemoryRange(mbi.BaseAddress, mbi.RegionSize));
+                
+            currentAddress = mbi.BaseAddress + mbi.RegionSize;
         }
 
-        return regions;
+        return MergeRegions(regions);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -63,5 +46,32 @@ public class MemoryRegionUtils
         if ((accessFilter & MemoryAccess.Executable) != 0 && !mbi.IsExecutableRegion()) return false;
 
         return true;
+    }
+
+    private static List<MemoryRange> MergeRegions(List<MemoryRange> regions)
+    {
+        var result = new List<MemoryRange>(regions.Count);
+        var span = CollectionsMarshal.AsSpan(regions);
+
+        ref MemoryRange current = ref span[0];
+
+        for (int i = 1; i < span.Length; i++)
+        {
+            ref readonly var next = ref span[i];
+
+            if (current.BaseAddress + current.Size == next.BaseAddress)
+            {
+                current.Size += next.Size;
+            }
+            else
+            {
+                result.Add(current);
+                current = next;
+            }
+        }
+
+        result.Add(current);
+
+        return result;
     }
 }

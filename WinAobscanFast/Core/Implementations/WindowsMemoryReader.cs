@@ -21,9 +21,4 @@ public class WindowsMemoryReader : IMemoryReader
     {
         return Native.ReadProcessMemory(_processHandle, baseAddress, buffer, (nuint)buffer.Length, out bytesRead);
     }
-
-    public void Dispose()
-    {
-        _processHandle?.Dispose();
-    }
 }

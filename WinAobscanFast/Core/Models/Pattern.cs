@@ -27,8 +27,8 @@ public readonly struct Pattern
         string[] tokens = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         int len = tokens.Length;
 
-        byte[] pBytes = GC.AllocateUninitializedArray<byte>(len, pinned: true);
-        byte[] pMask = GC.AllocateUninitializedArray<byte>(len, pinned: true);
+        byte[] pBytes = new byte[64];
+        byte[] pMask = new byte[64];
 
         for (int i = 0; i < tokens.Length; i++)
         {
