@@ -81,7 +81,7 @@ var options = new AobScanOptions
     MaxScanAddress = 0x7FFFFFFFFFF
 };
 
-var results = scanner.Scan("E8 ?? ?? ?? ?? 90", options);
+var results = AobScan.ScanProcess("Game Process.exe", "11 11 22 ?? ?? 22", options);
 ```
 
 ---
