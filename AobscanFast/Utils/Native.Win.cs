@@ -19,6 +19,14 @@ internal partial class Native
     public static partial bool Process32NextW(SafeHandle hSnapshot, ref PROCESSENTRY32W lppe);
 
     [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool Module32FirstW(SafeHandle hSnapshot, ref MODULEENTRY32W lpme);
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool Module32NextW(SafeHandle hSnapshot, ref MODULEENTRY32W lpme);
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
     public static partial SafeProcessHandle OpenProcess(ProcessAccessFlags dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, uint dwProcessId);
 
     [LibraryImport("kernel32.dll", SetLastError = true)]

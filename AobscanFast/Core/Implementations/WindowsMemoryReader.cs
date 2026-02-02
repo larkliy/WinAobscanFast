@@ -51,6 +51,9 @@ internal class WindowsMemoryReader(SafeProcessHandle processHandle) : IMemoryRea
 
     private static List<MemoryRange> MergeRegions(List<MemoryRange> regions)
     {
+        if (regions.Count == 0)
+            return regions;
+
         var result = new List<MemoryRange>(regions.Count);
         var span = CollectionsMarshal.AsSpan(regions);
 

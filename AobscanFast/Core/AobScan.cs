@@ -40,6 +40,48 @@ public class AobScan
         return await aobscan.ScanAsync(pattern, scanOptions, cancellationToken);
     }
 
+    public static List<nint> ScanModule(string process, string module, string pattern, AobScanOptions? scanOptions = null)
+    {
+        uint pid = WindowsProcessUtils.FindByName(process);
+        if (pid == 0) throw new ArgumentException($"Process '{process}' not found.");
+
+        var (modBase, modSize) = WindowsProcessUtils.GetModule(pid, module);
+
+        scanOptions ??= new AobScanOptions();
+        scanOptions.MinScanAddress = modBase;
+        scanOptions.MaxScanAddress = modBase + (nint)modSize;
+
+        if (scanOptions.MemoryAccess == MemoryAccess.None)
+            scanOptions.MemoryAccess = MemoryAccess.Readable;
+
+        using var handle = WindowsProcessUtils.OpenProcess(pid);
+        var memoryReader = ProcessMemoryFactory.CreateMemoryReader(handle);
+
+        var aobscan = new AobScan(memoryReader);
+        return aobscan.Scan(pattern, scanOptions);
+    }
+
+    public static async Task<List<nint>> ScanModuleAsync(string process, string module, string pattern, AobScanOptions? scanOptions = null, CancellationToken cancellationToken = default)
+    {
+        uint pid = WindowsProcessUtils.FindByName(process);
+        if (pid == 0) throw new ArgumentException($"Process '{process}' not found.");
+
+        var (modBase, modSize) = WindowsProcessUtils.GetModule(pid, module);
+
+        scanOptions ??= new AobScanOptions();
+        scanOptions.MinScanAddress = modBase;
+        scanOptions.MaxScanAddress = modBase + (nint)modSize;
+
+        if (scanOptions.MemoryAccess == MemoryAccess.None)
+            scanOptions.MemoryAccess = MemoryAccess.Readable;
+
+        using var handle = WindowsProcessUtils.OpenProcess(pid);
+        var memoryReader = ProcessMemoryFactory.CreateMemoryReader(handle);
+
+        var aobscan = new AobScan(memoryReader);
+        return await aobscan.ScanAsync(pattern, scanOptions, cancellationToken);
+    }
+
     public List<nint> Scan(string input)
         => Scan(input, s_scanOptionsDefault);
 

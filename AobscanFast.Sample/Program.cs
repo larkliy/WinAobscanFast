@@ -1,10 +1,10 @@
-Ôªøusing AobscanFast.Core;
+using AobscanFast.Core;
 
 Console.OutputEncoding = new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
-var results = AobScan.ScanProcess("Godot_v4.6-stable_mono_win64.exe", "11 11 22 ?? ?? 22");
+var results = AobScan.ScanModule("Godot_v4.6-stable_mono_win64.exe", "GodotSharp.dll", "FF");
 
-Console.WriteLine($"–†–µ–∑—É–ª—å—Ç–∞—Ç–æ–≤: {results.Count}");
+Console.WriteLine($"–ÂÁÛÎ¸Ú‡ÚÓ‚: {results.Count}");
 
 foreach (nint result in results.Take(10))
 {
