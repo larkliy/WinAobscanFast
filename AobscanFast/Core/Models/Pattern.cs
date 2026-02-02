@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 
-namespace WinAobscanFast.Core.Models;
+namespace AobscanFast.Core.Models;
 
 public readonly struct Pattern
 {

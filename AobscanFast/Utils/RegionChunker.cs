@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
-using WinAobscanFast.Core.Models;
+using AobscanFast.Core.Models;
 
-namespace WinAobscanFast.Utils;
+namespace AobscanFast.Utils;
 
 public static class RegionChunker
 {

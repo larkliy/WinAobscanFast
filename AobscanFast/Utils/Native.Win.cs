@@ -1,9 +1,9 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
-using WinAobscanFast.Enums;
-using WinAobscanFast.Structs;
+using AobscanFast.Enums;
+using AobscanFast.Structs;
 
-namespace WinAobscanFast;
+namespace AobscanFast;
 
 internal partial class Native
 {

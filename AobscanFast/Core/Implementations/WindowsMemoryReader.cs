@@ -1,13 +1,13 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using WinAobscanFast.Core.Abstractions;
-using WinAobscanFast.Core.Extensions;
-using WinAobscanFast.Core.Models;
-using WinAobscanFast.Enums;
-using WinAobscanFast.Structs;
+using AobscanFast.Core.Abstractions;
+using AobscanFast.Core.Extensions;
+using AobscanFast.Core.Models;
+using AobscanFast.Enums;
+using AobscanFast.Structs;
 
-namespace WinAobscanFast.Core.Implementations;
+namespace AobscanFast.Core.Implementations;
 
 internal class WindowsMemoryReader(SafeProcessHandle processHandle) : IMemoryReader
 {

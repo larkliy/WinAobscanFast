@@ -1,4 +1,4 @@
-﻿using WinAobscanFast.Core;
+﻿using AobscanFast.Core;
 
 Console.OutputEncoding = new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 

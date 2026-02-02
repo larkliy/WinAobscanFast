@@ -1,7 +1,7 @@
-﻿using WinAobscanFast.Structs;
-using static WinAobscanFast.Enums.MemoryProtect;
+﻿using AobscanFast.Structs;
+using static AobscanFast.Enums.MemoryProtect;
 
-namespace WinAobscanFast.Core.Extensions;
+namespace AobscanFast.Core.Extensions;
 
 public static class WindowsRegionExtensions
 {

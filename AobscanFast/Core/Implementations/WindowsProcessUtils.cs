@@ -1,9 +1,9 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using System.Runtime.CompilerServices;
-using WinAobscanFast.Enums;
-using WinAobscanFast.Structs;
+using AobscanFast.Enums;
+using AobscanFast.Structs;
 
-namespace WinAobscanFast.Core.Implementations;
+namespace AobscanFast.Core.Implementations;
 
 internal class WindowsProcessUtils
 {

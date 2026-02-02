@@ -1,8 +1,8 @@
 using Microsoft.Win32.SafeHandles;
-using WinAobscanFast.Core.Abstractions;
-using WinAobscanFast.Core.Implementations;
+using AobscanFast.Core.Abstractions;
+using AobscanFast.Core.Implementations;
 
-namespace WinAobscanFast.Core;
+namespace AobscanFast.Core;
 
 public static class ProcessMemoryFactory
 {

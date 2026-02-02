@@ -1,12 +1,12 @@
 ﻿using System.Buffers;
 using System.Runtime.CompilerServices;
-using WinAobscanFast.Core.Abstractions;
-using WinAobscanFast.Core.Implementations;
-using WinAobscanFast.Core.Models;
-using WinAobscanFast.Enums;
-using WinAobscanFast.Utils;
+using AobscanFast.Core.Abstractions;
+using AobscanFast.Core.Implementations;
+using AobscanFast.Core.Models;
+using AobscanFast.Enums;
+using AobscanFast.Utils;
 
-namespace WinAobscanFast.Core;
+namespace AobscanFast.Core;
 
 public class AobScan
 {

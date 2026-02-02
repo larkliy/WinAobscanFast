@@ -1,7 +1,7 @@
-﻿using WinAobscanFast.Core.Models;
-using WinAobscanFast.Enums;
+﻿using AobscanFast.Core.Models;
+using AobscanFast.Enums;
 
-namespace WinAobscanFast.Core.Abstractions;
+namespace AobscanFast.Core.Abstractions;
 
 public interface IMemoryReader
 {

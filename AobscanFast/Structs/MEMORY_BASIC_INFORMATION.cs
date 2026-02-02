@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
-using WinAobscanFast.Enums;
+using AobscanFast.Enums;
 
-namespace WinAobscanFast.Structs;
+namespace AobscanFast.Structs;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct MEMORY_BASIC_INFORMATION
