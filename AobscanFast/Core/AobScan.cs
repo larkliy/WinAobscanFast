@@ -24,25 +24,34 @@ public class AobScan
 
     public static List<nint> ScanProcess(string process, string pattern, AobScanOptions? scanOptions = null)
     {
-        if (OperatingSystem.IsWindows())
-        {
-            var processId = WindowsProcessUtils.FindByName(process);
-            using var handle = WindowsProcessUtils.OpenProcess(processId);
+        using var handle = ProcessMemoryFactory.OpenProcessByName(process);
+        var memoryReader = ProcessMemoryFactory.CreateMemoryReader(handle);
 
-            var aobscan = new AobScan(new WindowsMemoryReader(handle));
-            return aobscan.Scan(pattern, scanOptions);
-        }
+        var aobscan = new AobScan(memoryReader);
+        return aobscan.Scan(pattern, scanOptions);
+    }
 
-        throw new NotImplementedException();
+    public static async Task<List<nint>> ScanProcessAsync(string process, string pattern, AobScanOptions? scanOptions = null, CancellationToken cancellationToken = default)
+    {
+        using var handle = ProcessMemoryFactory.OpenProcessByName(process);
+        var memoryReader = ProcessMemoryFactory.CreateMemoryReader(handle);
+
+        var aobscan = new AobScan(memoryReader);
+        return await aobscan.ScanAsync(pattern, scanOptions, cancellationToken);
     }
 
     public List<nint> Scan(string input)
         => Scan(input, s_scanOptionsDefault);
 
-    public List<nint> Scan(string input, AobScanOptions? scanOptions)
+    public Task<List<nint>> ScanAsync(string input, CancellationToken cancellationToken = default)
+        => ScanAsync(input, s_scanOptionsDefault, cancellationToken);
+
+    public Task<List<nint>> ScanAsync(string input, AobScanOptions? scanOptions, CancellationToken cancellationToken = default) 
+        => Task.Run(() => Scan(input, scanOptions, cancellationToken), cancellationToken);
+
+    public List<nint> Scan(string input, AobScanOptions? scanOptions, CancellationToken cancellationToken = default)
     {
         scanOptions = ValidateScanOptions(scanOptions);
-
         var finalResults = new List<nint>(capacity: 1024);
         var pattern = Pattern.Create(input);
         var rawRegions = _memoryReader.GetRegions((nint)scanOptions.MinScanAddress!,
@@ -52,18 +61,15 @@ public class AobScan
         var chunks = RegionChunker.CreateMemoryChunks(rawRegions, pattern.Bytes.Length);
 
         Parallel.ForEach(chunks,
+            new ParallelOptions { CancellationToken = cancellationToken },
             () => new List<nint>(capacity: 64),
-
             (regionChunk, loopState, threadLocalList) =>
             {
                 int size = (int)regionChunk.Size;
+                if (size <= 0) return threadLocalList;
 
-                if (size <= 0)
-                    return threadLocalList;
-
-                byte[] poolBuffer = ArrayPool<byte>.Shared.Rent(size);
-
-                var buffer = poolBuffer.AsSpan(0, size);
+                byte[] rentedArray = ArrayPool<byte>.Shared.Rent(size);
+                Span<byte> buffer = rentedArray.AsSpan(0, size);
 
                 try
                 {
@@ -74,12 +80,11 @@ public class AobScan
                 }
                 finally
                 {
-                    ArrayPool<byte>.Shared.Return(poolBuffer);
+                    ArrayPool<byte>.Shared.Return(rentedArray);
                 }
 
                 return threadLocalList;
             },
-
             localList =>
             {
                 lock (_syncRoot)

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="AobscanFast.Sample/AobscanFast.Sample.csproj" Id="a166edce-ac20-40df-bbd6-fb565ac8ed30" />
+  <Project Path="AobscanFast/AobscanFast.csproj" />
+</Solution>

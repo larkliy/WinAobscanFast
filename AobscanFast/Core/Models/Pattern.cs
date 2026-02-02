@@ -23,37 +23,46 @@ public readonly struct Pattern
 
     public static Pattern Create(string pattern)
     {
-        Span<byte> pBytes = stackalloc byte[pattern.Length];
-        Span<byte> pMask = stackalloc byte[pattern.Length];
-        int length = 0;
+        byte[] pooledBytes = ArrayPool<byte>.Shared.Rent(pattern.Length);
+        byte[] pooledMask = ArrayPool<byte>.Shared.Rent(pattern.Length);
 
-        foreach (var range in pattern.AsSpan().Split(' '))
+        try
         {
-            ReadOnlySpan<char> token = pattern[range];
+            Span<byte> pBytes = pooledBytes.AsSpan(0, pattern.Length);
+            Span<byte> pMask = pooledMask.AsSpan(0, pattern.Length);
 
-            if (token[0] == '?')
+            int length = 0;
+            foreach (var range in pattern.AsSpan().Split(' '))
             {
-                pBytes[length] = byte.MinValue;
-                pMask[length] = byte.MinValue;
-            }
-            else
-            {
-                pBytes[length] = HexToByte(token);
-                pMask[length] = byte.MaxValue;
+                ReadOnlySpan<char> token = pattern.AsSpan(range);
+
+                if (token.Length >= 1 && token[0] == '?')
+                {
+                    pBytes[length] = 0;
+                    pMask[length] = 0;
+                }
+                else
+                {
+                    pBytes[length] = HexToByte(token);
+                    pMask[length] = 0xFF;
+                }
+                length++;
             }
 
-            length++;
+            var finalBytes = pBytes[..length].ToArray();
+            var finalMask = pMask[..length].ToArray();
+
+            if (!finalMask.Any(b => b == 0xFF))
+                throw new FormatException("A pattern cannot consist of masks alone.");
+
+            var (bestSeq, offset) = FindLongestSolidRun(finalBytes, finalMask);
+            return new Pattern(finalBytes, finalMask, bestSeq, offset);
         }
-
-        ReadOnlySpan<byte> finalBytes = pBytes[..length];
-        ReadOnlySpan<byte> finalMask = pMask[..length];
-
-        if (!finalMask.Contains(byte.MaxValue))
-            throw new FormatException("A pattern cannot consist of masks alone.");
-
-        var (bestSeq, offset) = FindLongestSolidRun(finalBytes, finalMask);
-
-        return new Pattern(finalBytes.ToArray(), finalMask.ToArray(), bestSeq, offset);
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(pooledBytes);
+            ArrayPool<byte>.Shared.Return(pooledMask);
+        }
     }
 
     private static (byte[] BestSequence, int Offset) FindLongestSolidRun(ReadOnlySpan<byte> pBytes, ReadOnlySpan<byte> pMask)
