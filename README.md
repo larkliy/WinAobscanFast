@@ -66,7 +66,19 @@ foreach (var addr in results)
 }
 ```
 
-### 2. Advanced Options
+### 2. Module-Specific Scanning
+
+Scan for patterns within a specific module of a process using `ScanModule` or `ScanModuleAsync`.
+
+```csharp
+// Synchronous scanning of a specific module
+var results = AobScan.ScanModule("Game Process.exe", "GameAssembly.dll", "11 11 22 ?? ?? 22");
+
+// Asynchronous scanning of a specific module
+var results = await AobScan.ScanModuleAsync("Game Process.exe", "GameAssembly.dll", "11 11 22 ?? ?? 22");
+```
+
+### 3. Advanced Options
 
 Need to scan only **Executable** memory (e.g., finding functions) or limit the address range?
 
@@ -75,7 +87,7 @@ var options = new AobScanOptions
 {
     // Filter regions: Only scan Executable + Readable memory
     MemoryAccess = MemoryAccess.Executable | MemoryAccess.Readable,
-    
+
     // Optional: Restrict scan range
     MinScanAddress = 0x7FF00000000,
     MaxScanAddress = 0x7FFFFFFFFFF
