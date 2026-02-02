@@ -2,7 +2,7 @@
 
   <img src="https://img.icons8.com/dusk/128/memory-slot.png" alt="logo" width="100" height="auto" />
   
-  <h1>⚡ WinAobscanFast</h1>
+  <h1>⚡ AobscanFast</h1>
   
   <p>
     <b>Blazing fast memory scanning (AOB) powered by SIMD & Parallelism.</b>
@@ -30,7 +30,7 @@
 
 ## 🚀 Why this project?
 
-Need to find a byte pattern in another process, but standard solutions are too slow or outdated? **WinAobscanFast** leverages modern hardware to get the job done instantly.
+Need to find a byte pattern in another process, but standard solutions are too slow or outdated? **AobscanFast** leverages modern hardware to get the job done instantly.
 
 *   💎 **Hardware Intrinsics:** Built with `Vector512`, `Vector256`, and `Vector128`. If your CPU supports AVX-512, this scanner **flies**.
 *   🧵 **Parallel Processing:** Memory is chunked and scanned concurrently across all available CPU threads.
@@ -44,7 +44,7 @@ Need to find a byte pattern in another process, but standard solutions are too s
 Just clone the repository and drop the project into your solution.
 
 ```bash
-git clone https://github.com/larkliy/WinAobscanFast.git
+git clone https://github.com/larkliy/AobscanFast.git
 ```
 
 ## 🔥 Usage
@@ -54,8 +54,8 @@ Designed to be simple. No complex configuration, just raw speed.
 ### 1. Simple Pattern Scan
 
 ```csharp
-using WinAobscanFast.Core;
-using WinAobscanFast.Core.Implementations;
+using AobscanFast.Core;
+using AobscanFast.Core.Implementations;
 
 var results = AobScan.ScanProcess("Game Process.exe", "11 11 22 ?? ?? 22");
 
