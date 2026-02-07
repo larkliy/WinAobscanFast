@@ -1,0 +1,15 @@
+
+
+Что нужно сделать:
+
+1. Реализовать чтение и получение регионов в Unix системах.
+2. Реализовать 1 дополнительный или несколько возможностей чтения паттерна 
+(создать абстрактный класс Pattern с асбтрактным методом Create)
+3. Реализовать таким образом паттерн "Стратегия", чередуя в зависимости от вида паттерна, обычный поиск чанка
+(с самым длинным Sequence) и с, например, Regex-паттерном, по типу:
+
+if (pattern is MaskPattern maskPattern) {
+	chunkScanner.Scan(maskpattern);
+} else if (pattern is RegexPattern regexPattern) {
+	chunkScanner.Scan(regexPattern);
+}

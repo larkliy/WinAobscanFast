@@ -3,25 +3,19 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 
-namespace AobscanFast.Core.Models;
+namespace AobscanFast.Core.Models.Pattern;
 
-public readonly struct Pattern
+internal class MaskPattern : PatternBase
 {
-    public readonly byte[] Bytes;
-    public readonly byte[] Mask;
+    public override byte[] Bytes { get; protected set; } = null!;
+    public byte[] Mask { get; private set; } = null!;
 
-    public readonly byte[] SearchSequence;
-    public readonly int SearchSequenceOffset;
+    public byte[] SearchSequence { get; private set; } = null!;
+    public int SearchSequenceOffset { get; private set; }
 
-    private Pattern(byte[] bytes, byte[] mask, byte[] searchSequence, int searchSequenceOffset)
-    {
-        Bytes = bytes;
-        Mask = mask;
-        SearchSequence = searchSequence;
-        SearchSequenceOffset = searchSequenceOffset;
-    }
+    public MaskPattern(string pattern) => Create(pattern);
 
-    public static Pattern Create(string pattern)
+    private void Create(string pattern)
     {
         byte[] pooledBytes = ArrayPool<byte>.Shared.Rent(pattern.Length);
         byte[] pooledMask = ArrayPool<byte>.Shared.Rent(pattern.Length);
@@ -56,7 +50,11 @@ public readonly struct Pattern
                 throw new FormatException("A pattern cannot consist of masks alone.");
 
             var (bestSeq, offset) = FindLongestSolidRun(finalBytes, finalMask);
-            return new Pattern(finalBytes, finalMask, bestSeq, offset);
+
+            Bytes = finalBytes;
+            Mask = finalMask;
+            SearchSequence = bestSeq;
+            SearchSequenceOffset = offset;
         }
         finally
         {
@@ -65,7 +63,8 @@ public readonly struct Pattern
         }
     }
 
-    private static (byte[] BestSequence, int Offset) FindLongestSolidRun(ReadOnlySpan<byte> pBytes, ReadOnlySpan<byte> pMask)
+    private static (byte[] BestSequence, int Offset) FindLongestSolidRun(ReadOnlySpan<byte> pBytes,
+                                                                         ReadOnlySpan<byte> pMask)
     {
         int bestStart = 0;
         int bestLength = 0;
@@ -111,7 +110,7 @@ public readonly struct Pattern
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsMatch(ref Span<byte> data)
+    public override bool IsMatch(ref Span<byte> data)
     {
         nuint length = (nuint)Bytes.Length;
 
@@ -180,5 +179,36 @@ public readonly struct Pattern
         }
 
         return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override void ScanChunk(in MemoryRange mbi, List<nint> threadLocalList, in Span<byte> buffer)
+    {
+        int lastValidPatternStart = (int)(mbi.Size - Bytes.Length);
+        int lastValidSeqPos = lastValidPatternStart + SearchSequenceOffset;
+        int currentOffset = 0;
+
+        while (true)
+        {
+            int remainingLength = lastValidSeqPos - currentOffset + SearchSequence.Length;
+            if (remainingLength < SearchSequence.Length)
+                break;
+
+            int hitIndex;
+            if ((hitIndex = buffer.Slice(currentOffset, remainingLength).IndexOf(SearchSequence)) == -1)
+                break;
+
+            int foundSeqPos = currentOffset + hitIndex;
+            int patternStartPos = foundSeqPos - SearchSequenceOffset;
+
+            if (patternStartPos >= 0)
+            {
+                var candidateBytes = buffer.Slice(patternStartPos, Bytes.Length);
+                if (IsMatch(ref candidateBytes))
+                    threadLocalList.Add(mbi.BaseAddress + patternStartPos);
+            }
+
+            currentOffset += hitIndex + 1;
+        }
     }
 }

@@ -6,7 +6,7 @@ internal struct ProcessInfo(nint processHandle) : IDisposable
 {
     public nint ProcessHandle { get; set; } = processHandle;
 
-    public void Dispose()
+    public readonly void Dispose()
     {
         if (OperatingSystem.IsWindows())
             Native.CloseHandle(ProcessHandle);

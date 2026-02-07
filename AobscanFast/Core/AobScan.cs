@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using AobscanFast.Core.Abstractions;
 using AobscanFast.Core.Models;
+using AobscanFast.Core.Models.Pattern;
 using AobscanFast.Utils;
 
 namespace AobscanFast.Core;
@@ -75,17 +76,32 @@ public class AobScan
     public List<nint> Scan(string input, AobScanOptions? scanOptions, CancellationToken cancellationToken = default)
     {
         scanOptions ??= new();
-        var finalResults = new List<nint>(capacity: 1024);
-        var pattern = Pattern.Create(input);
+        var pattern = PatternCreateFactory.Create(input);
+
         var rawRegions = _memoryReader.GetRegions((nint)scanOptions.MinScanAddress!,
                                                   (nint)scanOptions.MaxScanAddress!,
                                                   scanOptions.MemoryAccess);
 
         var chunks = RegionChunker.CreateMemoryChunks(rawRegions, pattern.Bytes.Length);
 
+        return pattern switch
+        {
+            MaskPattern d => ExecuteScan(d, chunks, cancellationToken),
+            SolidPattern s => ExecuteScan(s, chunks, cancellationToken),
+            _ => throw new NotImplementedException()
+        };
+    }
+
+    private List<nint> ExecuteScan<TPattern>(TPattern pattern,
+                                             List<MemoryRange> chunks,
+                                             CancellationToken cancellationToken = default) where TPattern : PatternBase
+    {
+        var finalResults = new List<nint>(capacity: 1024);
+
         Parallel.ForEach(chunks,
             new ParallelOptions { CancellationToken = cancellationToken },
             () => new List<nint>(capacity: 64),
+
             (regionChunk, loopState, threadLocalList) =>
             {
                 int size = (int)regionChunk.Size;
@@ -97,7 +113,7 @@ public class AobScan
                 try
                 {
                     if (_memoryReader.ReadMemory(regionChunk.BaseAddress, buffer, out _))
-                        ScanChunk(in regionChunk, threadLocalList, in pattern, size, in buffer);
+                        pattern.ScanChunk(in regionChunk, threadLocalList, buffer);
                 }
                 finally
                 {
@@ -106,6 +122,7 @@ public class AobScan
 
                 return threadLocalList;
             },
+
             localList =>
             {
                 lock (_syncRoot)
@@ -113,46 +130,5 @@ public class AobScan
             });
 
         return finalResults;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ScanChunk(
-        in MemoryRange mbi,
-        List<nint> threadLocalList,
-        in Pattern pattern,
-        int regionsSize,
-        in Span<byte> buffer)
-    {
-        int seqOffset = pattern.SearchSequenceOffset;
-        var searchSeq = pattern.SearchSequence;
-        int patternLength = pattern.Bytes.Length;
-        int searchSeqLength = searchSeq.Length;
-
-        int lastValidPatternStart = regionsSize - patternLength;
-        int lastValidSeqPos = lastValidPatternStart + seqOffset;
-        int currentOffset = 0;
-
-        while (true)
-        {
-            int remainingLength = lastValidSeqPos - currentOffset + searchSeqLength;
-            if (remainingLength < searchSeqLength)
-                break;
-
-            int hitIndex;
-            if ((hitIndex = buffer.Slice(currentOffset, remainingLength).IndexOf(searchSeq)) == -1)
-                break;
-
-            int foundSeqPos = currentOffset + hitIndex;
-            int patternStartPos = foundSeqPos - seqOffset;
-
-            if (patternStartPos >= 0)
-            {
-                var candidateBytes = buffer.Slice(patternStartPos, patternLength);
-                if (pattern.IsMatch(ref candidateBytes))
-                    threadLocalList.Add(mbi.BaseAddress + patternStartPos);
-            }
-
-            currentOffset += hitIndex + 1;
-        }
     }
 }
