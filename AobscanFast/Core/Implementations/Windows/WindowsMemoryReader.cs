@@ -1,6 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using AobscanFast.Core.Abstractions;
 using AobscanFast.Core.Extensions;
 using AobscanFast.Core.Models;
 using AobscanFast.Structs.Windows;
@@ -12,7 +10,7 @@ namespace AobscanFast.Core.Implementations.Windows;
 internal class WindowsMemoryReader(ProcessInfo processInfo) : IMemoryReader
 {
     public bool ReadMemory(nint baseAddress, Span<byte> buffer, out nuint bytesRead) 
-        => Native.ReadProcessMemory(processInfo.ProcessHandle, baseAddress, buffer, (nuint)buffer.Length, out bytesRead);
+        => Native.ReadProcessMemory(processInfo.ProcessId, baseAddress, buffer, (nuint)buffer.Length, out bytesRead);
 
     public List<MemoryRange> GetRegions(nint minAddress, nint maxAddress, MemoryAccess accessFilter)
     {
@@ -22,7 +20,7 @@ internal class WindowsMemoryReader(ProcessInfo processInfo) : IMemoryReader
 
         while (currentAddress < maxAddress)
         {
-            if (Native.VirtualQueryEx(processInfo.ProcessHandle, currentAddress, out var mbi, mbiSize) == 0)
+            if (Native.VirtualQueryEx(processInfo.ProcessId, currentAddress, out var mbi, mbiSize) == 0)
                 break;
 
             bool isCommit = mbi.State == MemoryState.MEM_COMMIT;
@@ -36,7 +34,7 @@ internal class WindowsMemoryReader(ProcessInfo processInfo) : IMemoryReader
             currentAddress = mbi.BaseAddress + mbi.RegionSize;
         }
 
-        return MergeRegions(regions);
+        return RegionUtils.MergeRegions(regions);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -47,36 +45,5 @@ internal class WindowsMemoryReader(ProcessInfo processInfo) : IMemoryReader
         if ((accessFilter & MemoryAccess.Executable) != 0 && !mbi.IsExecutableRegion()) return false;
 
         return true;
-    }
-
-    private static List<MemoryRange> MergeRegions(List<MemoryRange> regions)
-    {
-        if (regions.Count == 0)
-            return regions;
-
-        var result = new List<MemoryRange>(regions.Count);
-        var span = CollectionsMarshal.AsSpan(regions);
-
-        MemoryRange current = span[0];
-
-        for (int i = 1; i < span.Length; i++)
-        {
-            ref readonly var next = ref span[i];
-
-            if (current.BaseAddress + current.Size == next.BaseAddress)
-            {
-                current.Size += next.Size;
-            }
-            else
-            {
-                result.Add(current);
-
-                current = next;
-            }
-        }
-
-        result.Add(current);
-
-        return result;
     }
 }

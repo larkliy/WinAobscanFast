@@ -1,4 +1,3 @@
-using AobscanFast.Core.Abstractions;
 using AobscanFast.Core.Implementations.Unix;
 using AobscanFast.Core.Implementations.Windows;
 using AobscanFast.Core.Models;

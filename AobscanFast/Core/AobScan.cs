@@ -1,6 +1,4 @@
 ﻿using System.Buffers;
-using System.Runtime.CompilerServices;
-using AobscanFast.Core.Abstractions;
 using AobscanFast.Core.Models;
 using AobscanFast.Core.Models.Pattern;
 using AobscanFast.Utils;
@@ -82,7 +80,7 @@ public class AobScan
                                                   (nint)scanOptions.MaxScanAddress!,
                                                   scanOptions.MemoryAccess);
 
-        var chunks = RegionChunker.CreateMemoryChunks(rawRegions, pattern.Bytes.Length);
+        var chunks = RegionUtils.CreateMemoryChunks(rawRegions, pattern.Bytes.Length);
 
         return pattern switch
         {

@@ -1,7 +1,7 @@
 ﻿using AobscanFast.Core.Models;
 using AobscanFast.Enums.Windows;
 
-namespace AobscanFast.Core.Abstractions;
+namespace AobscanFast.Core;
 
 public interface IMemoryReader
 {

@@ -3,7 +3,7 @@ using AobscanFast.Core.Models;
 
 namespace AobscanFast.Utils;
 
-public static class RegionChunker
+public static class RegionUtils
 {
     public static List<MemoryRange> CreateMemoryChunks(List<MemoryRange> ranges, int patternLength)
     {
@@ -38,4 +38,34 @@ public static class RegionChunker
         return result;
     }
 
+    public static List<MemoryRange> MergeRegions(List<MemoryRange> regions)
+    {
+        if (regions.Count == 0)
+            return regions;
+
+        var result = new List<MemoryRange>(regions.Count);
+        var span = CollectionsMarshal.AsSpan(regions);
+
+        MemoryRange current = span[0];
+
+        for (int i = 1; i < span.Length; i++)
+        {
+            ref readonly var next = ref span[i];
+
+            if (current.BaseAddress + current.Size == next.BaseAddress)
+            {
+                current.Size += next.Size;
+            }
+            else
+            {
+                result.Add(current);
+
+                current = next;
+            }
+        }
+
+        result.Add(current);
+
+        return result;
+    }
 }
